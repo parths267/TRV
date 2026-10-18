@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 .DS_Store
-.idea/
+# IntelliJ personal files are listed in .idea/.gitignore
 .env
 __pycache__/
 *.py[codz]
@@ -226,6 +226,7 @@ test_refactor.py
 test_*.py
 !src/**/test_*.py
 !tests/**/test_*.py
+!apps/**/test_*.py
 
 # Internal strategy docs — not for public repo
 LAUNCH_STRATEGY.md
@@ -234,10 +235,19 @@ RELEASE_NOTES_*.md
 # Scratch / temp files
 Untitled-*
 
-# npm config (this is a Python project)
+# Root stays Python-only. A root package.json on a fork of this repo has
+# been used to ship malware. The Next.js app is allowed to keep its own.
 package.json
 package-lock.json
+!apps/web/package.json
+!apps/web/package-lock.json
 node_modules/
+apps/web/.next/
+*.tsbuildinfo
+apps/api/.venv/
+data/*.db
+data/board_cache.json
+data/upstox_token.json
 
 # Build artifacts that shouldn't be committed
 dist/

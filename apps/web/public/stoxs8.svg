@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" role="img" aria-label="Stoxs8">
+  <defs>
+    <linearGradient id="stoxs8-ribbon" x1="8" y1="68" x2="78" y2="4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B7F0DE"/>
+      <stop offset="0.45" stop-color="#3DDC97"/>
+      <stop offset="1" stop-color="#00B386"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(4 8)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#00B386" stroke-width="7" opacity="0.16">
+      <circle cx="28" cy="24" r="11"/>
+      <circle cx="28" cy="46" r="11"/>
+      <path d="M40 32l11-14 7 9 12-16"/>
+    </g>
+    <g stroke="url(#stoxs8-ribbon)" stroke-width="4.4">
+      <circle cx="28" cy="24" r="11"/>
+      <circle cx="28" cy="46" r="11"/>
+    </g>
+    <g stroke="url(#stoxs8-ribbon)" stroke-width="5.2">
+      <path d="M40 32l11-14 7 9 12-16"/>
+    </g>
+    <polygon points="74,5 66,8 73,15" fill="url(#stoxs8-ribbon)"/>
+  </g>
+  <text x="84" y="50" fill="#1B2522" font-family="Segoe UI, Arial, sans-serif" font-size="32" font-weight="700" letter-spacing="-0.4">Stoxs<tspan fill="#00B386">8</tspan></text>
+</svg>

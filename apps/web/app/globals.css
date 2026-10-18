@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --canvas: #f5f7f8;
+  --card: #ffffff;
+  --surface: #f5f7f8;
+  --text: #1b2522;
+  --primary: #00b386;
+  --primary-ink: #ffffff;
+  --line: #e3eae7;
+  --mute: #5e706a;
+  --up: #00b386;
+  --down: #d64545;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #10201c;
+  --canvas: #10201c;
+  --card: #17302a;
+  --surface: #17302a;
+  --text: #f5f7f8;
+  --primary: #00b386;
+  --primary-ink: #ffffff;
+  --line: #2a463e;
+  --mute: #b7c7c1;
+  --up: #00b386;
+  --down: #f07171;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+}
+
+a { color: inherit; }
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(27, 37, 34, 0.04), 0 8px 24px rgba(27, 37, 34, 0.04);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: color-mix(in srgb, var(--primary) 14%, var(--card));
+  color: var(--primary);
+}
+
+.lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(27, 37, 34, 0.08);
+}
+
+.nav-link {
+  display: block;
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
+  color: var(--mute);
+  font-size: 0.92rem;
+}
+
+.nav-link[data-active="true"] {
+  background: color-mix(in srgb, var(--primary) 14%, var(--bg));
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nav-link:hover {
+  background: color-mix(in srgb, var(--primary) 8%, var(--bg));
+  color: var(--text);
+}
+
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--mute); }
+th, td { padding: 0.55rem 0.4rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+input, select, button, textarea {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+}
+button:not(.ghost) {
+  cursor: pointer;
+  background: var(--primary);
+  color: var(--primary-ink);
+  border-color: transparent;
+  font-weight: 600;
+}
+button:not(.ghost):hover { background: #009973; }
+button.ghost {
+  cursor: pointer;
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line);
+}
+button.ghost:hover { background: color-mix(in srgb, var(--primary) 8%, var(--bg)); }
+.banner {
+  background: color-mix(in srgb, var(--primary) 12%, var(--bg));
+  color: var(--text);
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 35%, var(--line));
+  padding: 0.45rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.suggest-field {
+  position: relative;
+}
+
+.suggest-field svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mute);
+  pointer-events: none;
+}
+
+.suggest-field input {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--surface);
+  padding: 0.7rem 1rem 0.7rem 2.5rem;
+}
+
+.suggest-field input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--primary) 55%, var(--line));
+  background: var(--card);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+.suggest-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  max-height: 420px;
+  overflow: auto;
+  padding: 6px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(27, 37, 34, 0.14);
+}
+
+.suggest-label,
+.suggest-hint {
+  padding: 0.35rem 0.75rem;
+  color: var(--mute);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.suggest-hint {
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 500;
+}
+
+.suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.suggest-row[data-active="true"] {
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+}
+
+.suggest-row mark {
+  background: transparent;
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.suggest-symbol {
+  color: var(--mute);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.suggest-exchanges {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.suggest-exchanges span {
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--mute);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+}

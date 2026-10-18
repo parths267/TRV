@@ -25,6 +25,7 @@ from tradingview_mcp.core.services.indicators_calc import (
     calc_rsi, calc_bollinger, calc_macd, calc_ema, calc_sma, calc_atr,
     calc_supertrend, calc_donchian,
 )
+from tradingview_mcp.core.utils.yahoo_symbols import encode_yahoo_symbol
 
 _UA       = "tradingview-mcp/0.7.0 backtest-bot"
 _YF_BASE  = "https://query1.finance.yahoo.com/v8/finance/chart"
@@ -60,7 +61,10 @@ _SMA200_MIN_BARS  = 220
 # ─── Data Fetching ────────────────────────────────────────────────────────────
 
 def _fetch_ohlcv(symbol: str, period: str, interval: str = "1d") -> list[dict]:
-    url = f"{_YF_BASE}/{symbol}?interval={interval}&range={period}&includeAdjustedClose=true"
+    url = (
+        f"{_YF_BASE}/{encode_yahoo_symbol(symbol)}"
+        f"?interval={interval}&range={period}&includeAdjustedClose=true"
+    )
     req = urllib.request.Request(url, headers={"User-Agent": _UA})
 
     data = None

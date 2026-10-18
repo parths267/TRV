@@ -1,0 +1,30 @@
+# IntelliJ IDEA, PyCharm, and WebStorm.
+# Personal and machine-local files stay out of git.
+# Shared code styles and run configurations can still be committed.
+
+# User-specific
+/workspace.xml
+/tasks.xml
+/usage.statistics.xml
+/shelf/
+/dictionaries/
+/httpRequests/
+/dataSources/
+/dataSources.local.xml
+/aws.xml
+/deploymentTargetDropDown.xml
+/dynamic.xml
+/uiDesigner.xml
+/libraries/
+
+# Caches and indexes
+/caches/
+/jsLibraryMappings.xml
+/jsLinters/
+/sonarlint/
+/copilot.data.migration.*.xml
+
+# Regenerated from the project on each machine
+*.iml
+/modules.xml
+/misc.xml

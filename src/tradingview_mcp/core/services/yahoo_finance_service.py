@@ -32,6 +32,7 @@ from tradingview_mcp.core.services.proxy_manager import (
     build_opener_with_proxy,
     get_httpx_proxy,
 )
+from tradingview_mcp.core.utils.yahoo_symbols import encode_yahoo_symbol
 
 _TIMEOUT = 12
 _UA = "tradingview-mcp/0.5.0"
@@ -53,7 +54,7 @@ _STALE_QUOTE_SECONDS = 86_400
 
 
 def _quote_url(symbol: str) -> str:
-    return f"{_BASE}/{symbol}?interval=1d&range={_QUOTE_RANGE}"
+    return f"{_BASE}/{encode_yahoo_symbol(symbol)}?interval=1d&range={_QUOTE_RANGE}"
 
 
 def _valid_closes(chart_result: dict) -> list[float]:
