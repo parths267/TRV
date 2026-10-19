@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Failure, Loading } from "@/components/States";
 import { api } from "@/lib/api";
@@ -60,7 +61,10 @@ export default function IndicesPage() {
           <section className="grid gap-3 md:grid-cols-2">
             {data.indices.map((row) => (
               <article key={row.id} className="panel p-4">
-                <h2>{row.name}</h2>
+                <div className="flex items-start justify-between gap-3">
+                  <h2>{row.name}</h2>
+                  <Link href={`/options?index=${encodeURIComponent(row.id)}`} className="pill">OPTION CHAIN</Link>
+                </div>
                 {row.move.available ? (
                   <p className={`font-mono text-xl ${tone(row.move.change_pct)}`}>{pct(row.move.change_pct)}</p>
                 ) : (

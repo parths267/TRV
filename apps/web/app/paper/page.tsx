@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AutoTrader } from "@/components/AutoTrader";
 import { Failure } from "@/components/States";
 import { api } from "@/lib/api";
 import { num } from "@/lib/format";
@@ -51,6 +52,7 @@ export default function PaperPage() {
         </div>
       </section>
       {error && <Failure error={error} />}
+      <AutoTrader />
       <section className="panel p-4">
         <h2>Positions</h2>
         {(state?.positions.length || 0) === 0 ? <p className="text-sm text-mute">No paper positions.</p> : (

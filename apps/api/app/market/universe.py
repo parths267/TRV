@@ -135,6 +135,31 @@ BROAD_SNAPSHOT_NOTE = (
 )
 
 
+TOP_250_NOTE = (
+    "Nifty 100 and Nifty Midcap 150 constituent files saved on 19 Oct 2026. "
+    "Together they are the exchange's top 250 companies. Membership can lag the next reconstitution."
+)
+
+
+def top_250_symbols() -> set[str]:
+    """Nifty 100 plus Nifty Midcap 150. That is the exchange's top 250 names."""
+    import csv
+    from pathlib import Path
+
+    folder = Path(__file__).resolve().parent / "data"
+    symbols: set[str] = set()
+    for name in ("nifty100_2026-10-19.csv", "niftymidcap150_2026-10-19.csv"):
+        path = folder / name
+        if not path.exists():
+            continue
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            for record in csv.DictReader(handle):
+                symbol = (record.get("Symbol") or "").strip().upper()
+                if symbol:
+                    symbols.add(symbol)
+    return symbols
+
+
 def broad_universe() -> tuple[Instrument, ...]:
     """Index constituents beyond the NIFTY 50 list. Loaded from the stored snapshot."""
     import csv

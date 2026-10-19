@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     smtp_from: str | None = None
     telegram_bot_token: str | None = None
+    telegram_chat_id: str | None = None
     openai_base_url: str | None = None
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
@@ -41,6 +42,8 @@ class Settings(BaseSettings):
     upstox_api_key: str = ""
     upstox_api_secret: str = ""
     upstox_redirect_uri: str = "http://127.0.0.1:8000/api/v1/upstox/callback"
+    upstox_pin: str = ""
+    upstox_totp_secret: str = ""
 
     @property
     def cors_origin_list(self) -> list[str]:

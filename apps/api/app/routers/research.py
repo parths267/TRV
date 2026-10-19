@@ -15,7 +15,7 @@ from app.market.analysis import ScanRules
 from app.market.costs import DEFAULT_COSTS
 from app.market.universe import yahoo_for
 from app.models import SavedStrategy, User
-from app.providers.events import fetch_nse_activity
+from app.providers.events import fetch_nse_activity, fetch_upcoming_results
 from app.providers.demo import demo_events
 from app.config import get_settings
 from app.services.assistant import answer_question
@@ -112,6 +112,21 @@ def indices(body: IndexIn, _user: User = Depends(get_current_user)):
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return result | {"meta": {"data_mode": get_settings().data_mode}}
+
+
+@router.get("/results")
+async def corporate_results(_user: User = Depends(get_current_user)):
+    if get_settings().demo_mode:
+        return {
+            "status": "demo",
+            "provider": "demo",
+            "data_mode": "demo",
+            "results": [],
+            "count": 0,
+            "reason": "Demo mode has no exchange result calendar.",
+            "source_url": "https://www.nseindia.com/companies-listing/corporate-filings-event-calendar",
+        }
+    return await fetch_upcoming_results()
 
 
 @router.get("/events")

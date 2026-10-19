@@ -248,6 +248,7 @@ apps/api/.venv/
 data/*.db
 data/board_cache.json
 data/upstox_token.json
+data/autotrader/
 
 # Build artifacts that shouldn't be committed
 dist/

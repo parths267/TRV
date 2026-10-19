@@ -11,7 +11,7 @@ const LINKS = [
   ["/scanner", "Breakout Scanner"],
   ["/indices", "Index Intelligence"],
   ["/highs", "52-Week Highs/Lows"],
-  ["/deals", "Bulk & Block Deals"],
+  ["/results", "Corporate Result"],
   ["/research", "Stock Research"],
   ["/assistant", "AI Assistant"],
   ["/strategies", "Strategy Lab"],
@@ -45,9 +45,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {mode === "unreachable" && (
         <div className="banner">The API at {API_URL} is not responding. Market figures are hidden until it is back.</div>
       )}
-      <div className="lg:grid lg:grid-cols-[280px_1fr]">
-        <aside className={`${open ? "block" : "hidden"} lg:block border-b lg:border-b-0 lg:border-r border-[var(--line)] bg-[var(--card)] p-4`}>
-          <img src="/stoxs8.png" alt="Stoxs8" width={900} height={233} className="mb-5 h-auto w-full" />
+      <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className={`${open ? "block" : "hidden"} lg:block min-w-0 overflow-hidden border-b lg:border-b-0 lg:border-r border-[var(--line)] bg-[var(--card)] p-4`}>
+          <img src="/stoxs8.png" alt="Stoxs8" width={900} height={233} className="mb-5 h-auto w-full max-w-full" />
           <nav className="grid gap-1">
             {LINKS.map(([href, label]) => {
               const active = href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`);
@@ -60,7 +60,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Link href="/status" data-active={path === "/status"} className="nav-link">Data status</Link>
           </nav>
         </aside>
-        <div>
+        <div className="min-w-0">
           <header className="relative z-40 flex items-center gap-3 border-b border-[var(--line)] bg-[var(--card)] px-4 py-3">
             <button className="ghost lg:hidden" onClick={() => setOpen((value) => !value)} type="button">Menu</button>
             <TopSearch />

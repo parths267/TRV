@@ -7,11 +7,22 @@ import secrets
 import time
 import urllib.parse
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.config import get_settings
-from app.providers.upstox import UpstoxError, chain_summary, exchange_code, fetch_chain, load_token
+from app.deps import get_current_user, require_admin
+from app.models import User
+from app.providers.upstox import (
+    UpstoxError,
+    auto_login_configured,
+    chain_summary,
+    exchange_code,
+    fetch_chain,
+    load_token,
+    token_info,
+    totp_login,
+)
 
 log = logging.getLogger("bazaar.upstox")
 router = APIRouter(prefix="/api/v1/upstox", tags=["upstox"])
@@ -97,6 +108,24 @@ def callback(code: str = Query(default=""), state: str = Query(default=""), erro
         )
     )
     return _page("Nifty option chain", f"<table>{rows}</table><p>Source: Upstox.</p>")
+
+
+@router.get("/token")
+def token_status(_user: User = Depends(get_current_user)):
+    return token_info()
+
+
+@router.post("/totp-login")
+def totp_login_now(_admin: User = Depends(require_admin)):
+    if not auto_login_configured():
+        raise HTTPException(status_code=400, detail="Set UPSTOX_API_KEY, UPSTOX_PIN and UPSTOX_TOTP_SECRET in .env")
+    try:
+        totp_login()
+    except UpstoxError as exc:
+        raise HTTPException(status_code=exc.status, detail=exc.message) from exc
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail="UPSTOX_TOTP_SECRET is not a valid base32 secret") from exc
+    return token_info()
 
 
 @router.get("/chain")

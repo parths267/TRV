@@ -6,8 +6,10 @@ URL is not marked verified.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+import time
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -25,8 +27,13 @@ OFFICIAL = {
     "bulk": "https://www.nseindia.com/market-data/bulk-deal",
     "block": "https://www.nseindia.com/market-data/block-deal",
     "announcements": "https://www.nseindia.com/companies-listing/corporate-filings-announcements",
+    "results": "https://www.nseindia.com/companies-listing/corporate-filings-event-calendar",
     "bse_deals": "https://www.bseindia.com/markets/equity/EQReports/BulknBlockDeals.aspx",
 }
+
+IST = ZoneInfo("Asia/Kolkata")
+_RESULTS_TTL = 30 * 60
+_RESULTS_CACHE: tuple[float, dict] | None = None
 
 _HEALTH = {
     "provider": "nse_public_disclosures",
@@ -99,6 +106,93 @@ def _rows(payload: Any) -> list:
             if isinstance(payload.get(key), list):
                 return payload[key]
     return []
+
+
+def map_result_rows(rows: list, today: date) -> list[dict]:
+    """Keep upcoming financial-result rows. Other board purposes are left out."""
+    mapped = []
+    seen: set[tuple] = set()
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        purpose = str(_first(item, "purpose") or "")
+        if "financial results" not in purpose.lower():
+            continue
+        symbol = _first(item, "symbol")
+        raw_date = _first(item, "date")
+        if not symbol or not raw_date:
+            continue
+        try:
+            meeting = datetime.strptime(str(raw_date), "%d-%b-%Y").date()
+        except ValueError:
+            continue
+        if meeting < today:
+            continue
+        key = (str(symbol).upper(), meeting.isoformat(), purpose)
+        if key in seen:
+            continue
+        seen.add(key)
+        mapped.append(
+            {
+                "symbol": str(symbol).upper(),
+                "company": _first(item, "company"),
+                "purpose": purpose,
+                "detail": _first(item, "bm_desc"),
+                "date": meeting.isoformat(),
+                "exchange_date": str(raw_date),
+                "exchange": "NSE",
+                "source_url": OFFICIAL["results"],
+                "verification_status": "source_field_present",
+            }
+        )
+    mapped.sort(key=lambda row: (row["date"], row["symbol"]))
+    return mapped
+
+
+async def fetch_upcoming_results() -> dict:
+    """Board meetings the NSE event calendar marks as financial results."""
+    global _RESULTS_CACHE
+    now = time.time()
+    if _RESULTS_CACHE and now - _RESULTS_CACHE[0] < _RESULTS_TTL:
+        return _RESULTS_CACHE[1]
+    today = datetime.now(IST).date()
+    end = today + timedelta(days=90)
+    query = f"index=equities&from_date={today.strftime('%d-%m-%Y')}&to_date={end.strftime('%d-%m-%Y')}"
+    url = f"https://www.nseindia.com/api/event-calendar?{query}"
+    try:
+        async with httpx.AsyncClient(headers=_HEADERS, timeout=20, follow_redirects=True) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            payload = response.json()
+        from app.market.universe import TOP_250_NOTE, top_250_symbols
+
+        rows = payload if isinstance(payload, list) else _rows(payload)
+        universe = top_250_symbols()
+        results = [row for row in map_result_rows(rows, today) if row["symbol"] in universe]
+        body = {
+            "status": "ok",
+            "provider": "nse_event_calendar",
+            "data_mode": "live",
+            "results": results,
+            "count": len(results),
+            "universe_size": len(universe),
+            "universe_note": TOP_250_NOTE,
+            "window": {"from": today.isoformat(), "to": end.isoformat()},
+            "source_url": OFFICIAL["results"],
+        }
+        _RESULTS_CACHE = (now, body)
+        return body
+    except Exception as exc:
+        return {
+            "status": "unavailable",
+            "provider": "nse_event_calendar",
+            "data_mode": "live",
+            "reason": str(exc),
+            "results": [],
+            "count": 0,
+            "window": {"from": today.isoformat(), "to": end.isoformat()},
+            "source_url": OFFICIAL["results"],
+        }
 
 
 async def _nse_get(client: httpx.AsyncClient, path: str) -> Any:

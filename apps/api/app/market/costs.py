@@ -58,3 +58,12 @@ class EquityCostModel:
 
 
 DEFAULT_COSTS = EquityCostModel()
+
+
+def option_fees_inr(traded_value: float) -> float:
+    """Approximate paper brokerage for one option fill.
+
+    A flat 20 rupees plus 0.05% of premium. This is not an exchange invoice,
+    not STT, and not a broker's F&O schedule.
+    """
+    return round(20.0 + traded_value * 0.0005, 2)

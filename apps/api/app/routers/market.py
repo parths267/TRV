@@ -17,7 +17,9 @@ from app.market.session import session_status
 from app.market.universe import BY_SYMBOL, NIFTY_50, SNAPSHOT_NOTE, yahoo_for
 from app.models import User
 from app.providers.registry import provider_status, quotes
+from app.providers.upstox import UpstoxError
 from app.services.board import index_quotes, universe_board
+from app.services.options import build_chain
 
 router = APIRouter(prefix="/api/v1/market", tags=["market"])
 
@@ -171,6 +173,20 @@ def candles(
         "history": history,
         "meta": meta(provider=history.get("provider"), stale=bool(history.get("error"))),
     }
+
+
+@router.get("/options")
+def option_chain(
+    index: str = Query(min_length=1, max_length=32),
+    expiry: str = Query(default=""),
+    _user: User = Depends(get_current_user),
+):
+    try:
+        body = build_chain(index, expiry or None)
+    except UpstoxError as exc:
+        status = exc.status if 400 <= exc.status <= 599 else 502
+        raise HTTPException(status_code=status, detail=exc.message) from exc
+    return {**body, "meta": meta(source="upstox")}
 
 
 @router.get("/stream")

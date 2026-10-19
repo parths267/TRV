@@ -17,7 +17,8 @@ from app.market.universe import BY_SYMBOL, yahoo_for
 from app.models import AlertRule, Holding, Notification, PaperOrder, PaperPosition, User, Watchlist, WatchlistItem
 from app.providers.registry import quotes
 from app.services.alerts import evaluate_rule, evaluate_user_rules
-from app.services.paper import get_or_create_account, place_paper_order
+from app.services.options import option_mark, parse_trading_symbol
+from app.services.paper import get_or_create_account, place_option_order, place_paper_order
 
 router = APIRouter(prefix="/api/v1", tags=["account"])
 
@@ -54,6 +55,15 @@ class PaperIn(BaseModel):
     quantity: float
     allow_short: bool = False
     slippage_pct: float | None = None
+
+
+class OptionPaperIn(BaseModel):
+    index: str
+    expiry: str
+    strike: float
+    right: str
+    side: str
+    lots: int = Field(ge=1, le=500)
 
 
 class PlanIn(BaseModel):
@@ -319,8 +329,12 @@ def paper_state(user: User = Depends(get_current_user), db: Session = Depends(ge
     ).all()
     marked = []
     for position in positions:
-        quote = quotes().get_quote(yahoo_for(position.symbol))
-        price = quote.get("price")
+        if parse_trading_symbol(position.symbol):
+            price, as_of = option_mark(position.symbol)
+        else:
+            quote = quotes().get_quote(yahoo_for(position.symbol))
+            price = quote.get("price")
+            as_of = quote.get("market_time")
         unrealized = None if price is None else round((price - position.avg_price) * position.quantity, 2)
         marked.append(
             {
@@ -330,7 +344,7 @@ def paper_state(user: User = Depends(get_current_user), db: Session = Depends(ge
                 "last_price": price,
                 "unrealized_pnl": unrealized,
                 "realized_pnl": round(position.realized_pnl, 2),
-                "as_of": quote.get("market_time"),
+                "as_of": as_of,
             }
         )
     return {
@@ -369,6 +383,22 @@ def paper_order(body: PaperIn, user: User = Depends(get_current_user), db: Sessi
         slippage_pct=body.slippage_pct,
     )
     audit(db, user.id, "paper_order", f"{body.side} {body.symbol}")
+    return result
+
+
+@router.post("/paper/option-orders")
+def option_paper_order(body: OptionPaperIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    result = place_option_order(
+        db,
+        user,
+        index_id=body.index,
+        expiry=body.expiry,
+        strike=body.strike,
+        right=body.right,
+        side=body.side,
+        lots=body.lots,
+    )
+    audit(db, user.id, "paper_option_order", f"{body.side} {result['symbol']}")
     return result
 
 

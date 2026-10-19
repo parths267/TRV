@@ -64,10 +64,18 @@ def _cfg() -> dict:
     }
 
 
+_PLACEHOLDER_VALUES = {"your_username_prefix", "your_password_here"}
+
+
+def _is_real(value: str) -> bool:
+    text = value.split("#", 1)[0].strip()
+    return bool(text) and text not in _PLACEHOLDER_VALUES
+
+
 def is_proxy_configured() -> bool:
-    """Returns True only if all required env vars are set."""
+    """Returns True only when a real proxy login is set."""
     c = _cfg()
-    return c["enabled"] and bool(c["prefix"]) and bool(c["password"])
+    return c["enabled"] and _is_real(c["prefix"]) and _is_real(c["password"])
 
 
 def get_proxy_url() -> Optional[str]:

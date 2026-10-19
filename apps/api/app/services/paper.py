@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.market.costs import DEFAULT_COSTS
+from app.market.costs import DEFAULT_COSTS, option_fees_inr
 from app.market.universe import BY_SYMBOL, yahoo_for
 from app.models import PaperAccount, PaperOrder, PaperPosition, User
 from app.providers.registry import quotes
@@ -47,11 +47,94 @@ def place_paper_order(
             detail=f"No quote for {symbol}. The paper order was not filled. {quote.get('error', '')}".strip(),
         )
     slip = DEFAULT_COSTS.slippage_pct if slippage_pct is None else slippage_pct
+    return _book_fill(
+        db,
+        user,
+        symbol=symbol,
+        side=side,
+        quantity=quantity,
+        price=float(price),
+        slip=slip,
+        fee_for=DEFAULT_COSTS.fees_inr,
+        allow_short=allow_short,
+        data_as_of=quote.get("market_time"),
+        quote_stale=bool(quote.get("quote_stale")),
+        note="paper fill from delayed or demo quote; not a broker order",
+        provider=quote.get("provider"),
+        data_mode=quote.get("data_mode", "live"),
+    )
+
+
+def place_option_order(
+    db: Session,
+    user: User,
+    *,
+    index_id: str,
+    expiry: str,
+    strike: float,
+    right: str,
+    side: str,
+    lots: int,
+) -> dict:
+    from app.services.options import quote_contract
+
+    side = side.lower().strip()
+    if side not in {"buy", "sell"}:
+        raise HTTPException(status_code=400, detail="side must be buy or sell")
+    if lots <= 0:
+        raise HTTPException(status_code=400, detail="lots must be positive")
+    contract = quote_contract(index_id, expiry, strike, right)
+    max_lots = contract.get("max_lots")
+    if max_lots is not None and lots > max_lots:
+        raise HTTPException(status_code=400, detail=f"Paper orders on this contract are limited to {max_lots} lots.")
+    units = lots * contract["lot_size"]
+    result = _book_fill(
+        db,
+        user,
+        symbol=contract["trading_symbol"],
+        side=side,
+        quantity=units,
+        price=contract["ltp"],
+        slip=DEFAULT_COSTS.slippage_pct,
+        fee_for=lambda _side, traded: option_fees_inr(traded),
+        allow_short=False,
+        data_as_of=contract.get("as_of"),
+        quote_stale=bool(contract.get("quote_stale")),
+        note=(
+            f"paper option fill from Upstox premium; not a broker order. "
+            f"{lots} lot x {contract['lot_size']}"
+        ),
+        provider="upstox",
+        data_mode="live",
+    )
+    result["lots"] = lots
+    result["lot_size"] = contract["lot_size"]
+    result["premium"] = contract["ltp"]
+    return result
+
+
+def _book_fill(
+    db: Session,
+    user: User,
+    *,
+    symbol: str,
+    side: str,
+    quantity: float,
+    price: float,
+    slip: float,
+    fee_for,
+    allow_short: bool,
+    data_as_of: str | None,
+    quote_stale: bool,
+    note: str,
+    provider: str | None,
+    data_mode: str,
+) -> dict:
     if slip < 0 or slip > 5:
         raise HTTPException(status_code=400, detail="slippage_pct must be between 0 and 5")
     fill = price * (1 + slip / 100) if side == "buy" else price * (1 - slip / 100)
     traded = fill * quantity
-    fees = DEFAULT_COSTS.fees_inr(side, traded)
+    fees = fee_for(side, traded)
     account = get_or_create_account(db, user)
     position = db.scalar(
         select(PaperPosition).where(PaperPosition.user_id == user.id, PaperPosition.symbol == symbol)
@@ -95,10 +178,10 @@ def place_paper_order(
         fill_price=round(fill, 4),
         fees=fees,
         slippage_pct=slip,
-        data_as_of=quote.get("market_time"),
-        quote_stale=bool(quote.get("quote_stale")),
+        data_as_of=data_as_of,
+        quote_stale=quote_stale,
         status="filled",
-        note="paper fill from delayed or demo quote; not a broker order",
+        note=note,
     )
     db.add(order)
     db.commit()
@@ -120,6 +203,6 @@ def place_paper_order(
         "sector": sector,
         "paper": True,
         "live_trading_enabled": False,
-        "provider": quote.get("provider"),
-        "data_mode": quote.get("data_mode", "live"),
+        "provider": provider,
+        "data_mode": data_mode,
     }

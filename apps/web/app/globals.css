@@ -107,6 +107,7 @@ button:not(.ghost) {
   font-weight: 600;
 }
 button:not(.ghost):hover { background: #009973; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
 button.ghost {
   cursor: pointer;
   background: transparent;
@@ -228,4 +229,133 @@ button.ghost:hover { background: color-mix(in srgb, var(--primary) 8%, var(--bg)
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 0.15rem 0.45rem;
+}
+
+.chain-scroll { overflow-x: auto; }
+.chain-table { min-width: 980px; font-size: 0.75rem; }
+.chain-table th, .chain-table td { padding: 0.35rem 0.45rem; white-space: nowrap; text-align: right; }
+.chain-table th { font-size: 0.68rem; }
+.chain-call { background: color-mix(in srgb, var(--up) 8%, transparent); }
+.chain-put { background: color-mix(in srgb, var(--down) 8%, transparent); }
+.chain-strike { background: var(--card); text-align: center; font-weight: 700; }
+.chain-spot td {
+  background: var(--text);
+  color: var(--bg);
+  text-align: center;
+  font-weight: 700;
+  border-bottom-color: var(--text);
+}
+button.chain-hit {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+button.chain-hit[data-on="true"],
+button.chain-hit:hover {
+  color: var(--primary);
+  background: transparent;
+}
+
+.modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(16, 32, 28, 0.45);
+}
+
+.modal-card {
+  width: min(440px, 100%);
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 24px 60px rgba(16, 32, 28, 0.24);
+}
+
+.result-day {
+  display: grid;
+  gap: 10px;
+}
+
+.result-date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--primary) 12%, var(--card));
+  padding: 8px 12px;
+}
+
+.result-date strong {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--text);
+}
+
+.result-date span {
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.result-list {
+  display: grid;
+  gap: 8px;
+}
+
+.result-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 12px 14px;
+}
+
+.result-row:hover {
+  border-color: color-mix(in srgb, var(--primary) 50%, var(--line));
+}
+
+.result-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: var(--surface);
+  color: var(--mute);
+}
+
+.result-chip[data-tone="result"] {
+  background: color-mix(in srgb, var(--primary) 14%, var(--card));
+  color: var(--primary);
+}
+
+@media (min-width: 768px) {
+  .result-day {
+    grid-template-columns: 84px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .result-date {
+    position: sticky;
+    top: 12px;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 12px 8px;
+    text-align: center;
+  }
 }

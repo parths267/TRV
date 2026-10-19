@@ -40,7 +40,7 @@ type Dashboard = {
 const SHORTCUTS = [
   { href: "/scanner", title: "Breakout scanner", hint: "Close-through setups", color: "#00B386", mark: "↗" },
   { href: "/highs", title: "52-week study", hint: "252 prior sessions", color: "#6C5CE7", mark: "▣" },
-  { href: "/deals", title: "Bulk and block", hint: "Exchange disclosures", color: "#F5A524", mark: "◈" },
+  { href: "/results", title: "Corporate Result", hint: "Upcoming company results", color: "#0EA5A0", mark: "▤" },
   { href: "/portfolio", title: "Your book", hint: "Watchlist and holdings", color: "#3B82F6", mark: "◎" },
 ];
 
@@ -119,19 +119,19 @@ export default function OverviewPage() {
   const breadthTotal = data.breadth.advances + data.breadth.declines + data.breadth.unchanged || 1;
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
-      <div className="grid gap-5">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+    <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="grid min-w-0 gap-5">
+        <div className="grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="min-w-0">
             <div className="text-xs font-semibold tracking-[0.14em] text-mute">{sessionEyebrow(data.session)}</div>
             <h1 className="mt-1 text-2xl font-semibold">{data.session.label}</h1>
-            <p className="mt-1 max-w-2xl text-sm text-mute">{data.session.limitation}</p>
+            <p className="mt-1 max-w-xl text-sm text-mute">{data.session.limitation}</p>
           </div>
-          <div className="text-right text-sm text-mute">
+          <div className="grid justify-items-start gap-0.5 text-sm text-mute md:justify-items-end md:text-right">
             <div>{data.meta.delayed ? "Delayed unofficial feed" : "Demo feed"} · {data.meta.data_mode}</div>
             <div>Updated {new Date(data.meta.fetched_at).toLocaleTimeString("en-IN")}</div>
             <div>Quotes refresh in the background</div>
-            <button className="ghost mt-2" type="button" onClick={() => load(true)}>Refresh</button>
+            <button className="ghost mt-2 w-fit" type="button" onClick={() => load(true)}>Refresh</button>
           </div>
         </div>
 
@@ -140,8 +140,8 @@ export default function OverviewPage() {
             <h2 className="text-lg font-semibold">Index</h2>
             <Link href="/indices" className="pill">SCREENER</Link>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            {data.indices.slice(0, 3).map((row) => (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {data.indices.map((row) => (
               <IndexCard key={row.display_symbol} row={row} />
             ))}
           </div>
@@ -256,11 +256,11 @@ export default function OverviewPage() {
 function IndexCard({ row }: { row: Quote }) {
   const up = (row.change_pct ?? 0) >= 0;
   return (
-    <article className="panel lift p-4">
+    <Link href={`/options?index=${encodeURIComponent(row.display_symbol || "")}`} className="panel lift block p-4">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <div className="text-base font-semibold">{row.name || row.display_symbol}</div>
-          <div className="text-xs text-mute">{row.exchange || "NSE"}</div>
+          <div className="text-xs text-mute">{row.exchange || "NSE"} · Option chain</div>
         </div>
         <Sparkline values={row.sparkline} up={up} />
       </div>
@@ -272,7 +272,7 @@ function IndexCard({ row }: { row: Quote }) {
           <div className={`mt-1 text-sm font-semibold ${tone(row.change_pct)}`}>{indexMove(row)}</div>
         </>
       )}
-    </article>
+    </Link>
   );
 }
 

@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import REPO_ROOT, get_settings
 from app.db import SessionLocal, init_db
-from app.routers import account, auth, market, research, upstox
+from app.routers import account, auth, autotrader, market, research, upstox
 from app.security import hash_password
 from app.worker import start_scheduler
 
@@ -110,3 +110,4 @@ app.include_router(market.router)
 app.include_router(research.router)
 app.include_router(account.router)
 app.include_router(upstox.router)
+app.include_router(autotrader.router)
