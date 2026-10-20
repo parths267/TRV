@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import REPO_ROOT, get_settings
@@ -71,24 +72,60 @@ async def lifespan(_app: FastAPI):
         scheduler.shutdown(wait=False)
 
 
-app = FastAPI(title="Stoxs8", version="0.1.0", lifespan=lifespan)
 settings = get_settings()
+app = FastAPI(
+    title="Stoxs8",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+if settings.is_production:
+    hosts = ["127.0.0.1", "localhost"]
+    for origin in settings.cors_origin_list:
+        hosts.append(origin.split("://", 1)[-1].split("/")[0])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=hosts)
+
+
+def _client_ip(request: Request) -> str:
+    peer = request.client.host if request.client else ""
+    if peer in {"127.0.0.1", "::1", "testclient"}:
+        forwarded = request.headers.get("x-forwarded-for", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip()[:64]
+    return peer or "local"
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Cache-Control"] = "no-store"
+    if get_settings().is_production:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 
 @app.middleware("http")
 async def rate_limit(request: Request, call_next):
-    if request.url.path.startswith("/api/v1/auth"):
-        key = f"{request.client.host if request.client else 'local'}:{request.url.path}"
+    path = request.url.path
+    if path.startswith("/api/v1/auth"):
+        limit = 10 if path.endswith("/login") else 30
+        key = f"{_client_ip(request)}:{path}"
         now = time.time()
         hits = [stamp for stamp in _HITS[key] if now - stamp < 60]
-        if len(hits) >= 20:
+        if len(hits) >= limit:
             return JSONResponse({"detail": "Too many authentication attempts. Wait a minute."}, status_code=429)
         hits.append(now)
         _HITS[key] = hits

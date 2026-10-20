@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     upstox_redirect_uri: str = "http://127.0.0.1:8000/api/v1/upstox/callback"
     upstox_pin: str = ""
     upstox_totp_secret: str = ""
+    # None follows the environment: closed in production, open in development.
+    registration_enabled: bool | None = None
 
     @property
     def cors_origin_list(self) -> list[str]:
@@ -56,6 +58,12 @@ class Settings(BaseSettings):
     @property
     def demo_mode(self) -> bool:
         return self.data_mode.lower() == "demo"
+
+    @property
+    def allow_registration(self) -> bool:
+        if self.registration_enabled is not None:
+            return self.registration_enabled
+        return not self.is_production
 
 
 @lru_cache

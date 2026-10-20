@@ -129,7 +129,7 @@ def totp_login_now(_admin: User = Depends(require_admin)):
 
 
 @router.get("/chain")
-def chain(expiry: str = Query(default="current_week")):
+def chain(expiry: str = Query(default="current_week"), _user: User = Depends(get_current_user)):
     if not load_token():
         raise HTTPException(status_code=401, detail="Log in at /api/v1/upstox/login first")
     try:

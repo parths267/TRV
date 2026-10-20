@@ -36,12 +36,12 @@ def meta(**extra) -> dict:
 
 
 @router.get("/session")
-def session():
+def session(_user: User = Depends(get_current_user)):
     return {"session": session_status(), "meta": meta()}
 
 
 @router.get("/status")
-def status():
+def status(_user: User = Depends(get_current_user)):
     return {"providers": provider_status(), "meta": meta()}
 
 

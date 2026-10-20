@@ -1,7 +1,9 @@
 """Registration, sessions, and password reset."""
 from __future__ import annotations
 
+import re
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -26,7 +28,7 @@ class RegisterIn(BaseModel):
 
 class LoginIn(BaseModel):
     email: str = Field(min_length=1, max_length=320)
-    password: str
+    password: str = Field(min_length=1, max_length=128)
 
 
 class TokenIn(BaseModel):
@@ -39,11 +41,11 @@ class ResetIn(BaseModel):
 
 
 class ProfileIn(BaseModel):
-    name: str | None = None
-    timezone: str | None = None
-    quiet_start: str | None = None
-    quiet_end: str | None = None
-    telegram_chat_id: str | None = None
+    name: str | None = Field(default=None, max_length=120)
+    timezone: str | None = Field(default=None, max_length=64)
+    quiet_start: str | None = Field(default=None, max_length=5)
+    quiet_end: str | None = Field(default=None, max_length=5)
+    telegram_chat_id: str | None = Field(default=None, max_length=20)
     theme: str | None = None
 
 
@@ -79,6 +81,8 @@ def _public_user(user: User) -> dict:
 
 @router.post("/register")
 def register(body: RegisterIn, db: Session = Depends(get_db)):
+    if not get_settings().allow_registration:
+        raise HTTPException(status_code=403, detail="Registration is closed")
     email = body.email.lower()
     if db.scalar(select(User).where(User.email == email)):
         raise HTTPException(status_code=409, detail="An account with that email already exists")
@@ -98,11 +102,28 @@ def register(body: RegisterIn, db: Session = Depends(get_db)):
     return payload
 
 
+_LOGIN_FAILS: dict[str, list[float]] = {}
+_DUMMY_PASSWORD = hash_password("timing-only")
+
+
+def _login_locked(email: str, now: float | None = None) -> bool:
+    moment = time.time() if now is None else now
+    recent = [stamp for stamp in _LOGIN_FAILS.get(email, []) if moment - stamp < 900]
+    _LOGIN_FAILS[email] = recent
+    return len(recent) >= 8
+
+
 @router.post("/login")
 def login(body: LoginIn, db: Session = Depends(get_db)):
-    user = db.scalar(select(User).where(User.email == body.email.lower()))
-    if user is None or not verify_password(body.password, user.password_hash):
+    email = body.email.lower()
+    if _login_locked(email):
+        raise HTTPException(status_code=429, detail="Too many sign-in attempts. Wait 15 minutes.")
+    user = db.scalar(select(User).where(User.email == email))
+    stored = user.password_hash if user is not None else _DUMMY_PASSWORD
+    if user is None or not verify_password(body.password, stored):
+        _LOGIN_FAILS.setdefault(email, []).append(time.time())
         raise HTTPException(status_code=401, detail="Username or password is incorrect")
+    _LOGIN_FAILS.pop(email, None)
     audit(db, user.id, "login", "")
     return {"user": _public_user(user), "access_token": create_access_token(user.id, user.role, user.plan)}
 
@@ -116,6 +137,12 @@ def me(user: User = Depends(get_current_user)):
 def update_me(body: ProfileIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if body.theme and body.theme not in {"dark", "light"}:
         raise HTTPException(status_code=400, detail="theme must be dark or light")
+    for field in ("quiet_start", "quiet_end"):
+        value = getattr(body, field)
+        if value and not re.fullmatch(r"\d{2}:\d{2}", value):
+            raise HTTPException(status_code=400, detail="Quiet hours use 24-hour HH:MM")
+    if body.telegram_chat_id and not re.fullmatch(r"-?\d{5,20}", body.telegram_chat_id):
+        raise HTTPException(status_code=400, detail="Telegram chat id must be the numeric id")
     for field in ("name", "timezone", "quiet_start", "quiet_end", "telegram_chat_id", "theme"):
         value = getattr(body, field)
         if value is not None:
