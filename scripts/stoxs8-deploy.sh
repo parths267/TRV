@@ -11,8 +11,10 @@ if [ "$dow" -le 5 ] && [ "$hm" -ge 915 ] && [ "$hm" -le 1530 ]; then
   target=$(TZ=Asia/Kolkata date -d "today 15:31" +%s)
   delay=$((target - now))
   [ "$delay" -lt 1 ] && delay=1
-  systemctl stop stoxs8-after-close.service 2>/dev/null || true
-  systemctl reset-failed stoxs8-after-close.service 2>/dev/null || true
+  systemctl stop stoxs8-after-close.timer stoxs8-after-close.service 2>/dev/null || true
+  systemctl reset-failed stoxs8-after-close.timer stoxs8-after-close.service 2>/dev/null || true
+  rm -f /run/systemd/transient/stoxs8-after-close.timer /run/systemd/transient/stoxs8-after-close.service
+  systemctl daemon-reload
   systemd-run --unit=stoxs8-after-close --on-active="${delay}s" /usr/local/bin/stoxs8-apply
   echo "Market session is open. The release is staged and will go live at 15:31 IST."
 else
