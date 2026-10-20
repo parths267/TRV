@@ -1,0 +1,64 @@
+name: Deploy Stoxs8
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: stoxs8-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Test the API
+        working-directory: apps/api
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -e ../..
+          python -m pytest -q tests -p no:warnings
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Build the website
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_URL: https://8-231-81-151.sslip.io
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish to the Mumbai server
+        env:
+          SSH_KEY: ${{ secrets.STOXS8_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/stoxs8
+          chmod 600 ~/.ssh/stoxs8
+          ssh-keyscan -H 8.231.81.151 >> ~/.ssh/known_hosts
+          rsync -az --delete \
+            --exclude .git \
+            --exclude .env \
+            --exclude data \
+            --exclude apps/api/.venv \
+            --exclude apps/web/.next/cache \
+            --exclude '**/__pycache__' \
+            --exclude .pytest_cache \
+            -e "ssh -i ~/.ssh/stoxs8 -o StrictHostKeyChecking=yes" \
+            ./ deploy@8.231.81.151:/opt/stoxs8-staging/
+          ssh -i ~/.ssh/stoxs8 -o StrictHostKeyChecking=yes deploy@8.231.81.151 sudo /usr/local/bin/stoxs8-deploy
