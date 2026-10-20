@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  async rewrites() {
+    if (!isDev) return [];
+    return [{ source: "/api/:path*", destination: "http://127.0.0.1:8000/api/:path*" }];
+  },
   async headers() {
     return [
       {
@@ -16,7 +22,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
+              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://api.dharun.dev",
               "connect-src 'self'",

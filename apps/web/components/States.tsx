@@ -1,7 +1,13 @@
 "use client";
 
 export function Loading({ label = "Loading market data" }: { label?: string }) {
-  return <div className="panel p-6 text-mute">{label}…</div>;
+  return (
+    <div className="panel grid gap-3 p-6">
+      <div className="h-3 w-40 rounded-full bg-[var(--surface)]" />
+      <div className="h-3 w-64 max-w-full rounded-full bg-[var(--surface)]" />
+      <p className="text-sm text-mute">{label}…</p>
+    </div>
+  );
 }
 
 export function Failure({ error, onRetry }: { error: string; onRetry?: () => void }) {

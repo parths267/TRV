@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PageHead } from "@/components/PageHead";
 import { Failure } from "@/components/States";
 import { api } from "@/lib/api";
 
@@ -13,6 +14,11 @@ export default function AssistantPage() {
 
   return (
     <div className="grid gap-4">
+      <PageHead
+        kicker="Research"
+        title="AI assistant"
+        lede="Facts come from the scanner, the 52-week study, or the index monitor. A language model is used only to rephrase that JSON, and only when a key is configured. Pro plan."
+      />
       <form className="panel grid gap-3 p-4" onSubmit={async (event) => {
         event.preventDefault();
         setError("");
@@ -23,8 +29,6 @@ export default function AssistantPage() {
           setError(err instanceof Error ? err.message : "Assistant failed");
         }
       }}>
-        <h1 className="text-xl font-semibold">Research assistant</h1>
-        <p className="text-sm text-mute">Facts come from the scanner, the 52-week study, or the index monitor. A language model is used only to rephrase that JSON, and only when a key is configured. Pro plan.</p>
         <textarea value={question} onChange={(event) => setQuestion(event.target.value)} rows={3} />
         <button type="submit">Ask</button>
       </form>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { PageHead } from "@/components/PageHead";
 import { Failure, Loading } from "@/components/States";
 import { api } from "@/lib/api";
 import { num, pct } from "@/lib/format";
@@ -57,6 +58,11 @@ export default function ScannerPage() {
 
   return (
     <div className="grid gap-4">
+      <PageHead
+        kicker="Market"
+        title="Breakout scanner"
+        lede="A close through the prior lookback high, with relative volume and a liquidity floor, is a filter. It is not a forecast. Intraday scans need a Pro plan. Free plans are limited to daily bars."
+      />
       <section className="panel grid gap-3 p-4 md:grid-cols-4">
         <label className="grid gap-1 text-sm">Direction
           <select value={direction} onChange={(event) => setDirection(event.target.value)}>
@@ -77,12 +83,12 @@ export default function ScannerPage() {
         </label>
         <button type="button" onClick={run}>Run scan</button>
       </section>
-      <p className="text-sm text-mute">A close through the prior lookback high, with relative volume and a liquidity floor, is a filter. It is not a forecast. Intraday scans need a Pro plan. Free plans are limited to daily bars.</p>
       {loading && <Loading label="Scanning the NIFTY 50 snapshot" />}
       {error && <Failure error={error} onRetry={run} />}
       {result && (
-        <section className="panel p-4">
-          <h1 className="font-medium">{result.qualified.length} qualified of {result.scanned}. {result.rejected} did not qualify or had no data.</h1>
+        <section className="panel overflow-x-auto p-4">
+          <h2>{result.qualified.length} qualified of {result.scanned}</h2>
+          <p className="text-sm text-mute">{result.rejected} did not qualify or had no data.</p>
           <p className="text-sm text-mute">{result.example_only}</p>
           {result.qualified.length === 0 ? <p className="mt-4 text-sm">No names met every condition on the latest bar.</p> : (
             <table className="mt-3">

@@ -123,9 +123,9 @@ export default function OverviewPage() {
       <div className="grid min-w-0 gap-5">
         <div className="grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
           <div className="min-w-0">
-            <div className="text-xs font-semibold tracking-[0.14em] text-mute">{sessionEyebrow(data.session)}</div>
-            <h1 className="mt-1 text-2xl font-semibold">{data.session.label}</h1>
-            <p className="mt-1 max-w-xl text-sm text-mute">{data.session.limitation}</p>
+            <div className="page-kicker">{sessionEyebrow(data.session)}</div>
+            <h1 className="page-title">{data.session.label}</h1>
+            <p className="page-lede">{data.session.limitation}</p>
           </div>
           <div className="grid justify-items-start gap-0.5 text-sm text-mute md:justify-items-end md:text-right">
             <div>{data.meta.delayed ? "Delayed unofficial feed" : "Demo feed"} · {data.meta.data_mode}</div>
@@ -269,7 +269,7 @@ function IndexCard({ row }: { row: Quote }) {
       ) : (
         <>
           <div className="mt-3 text-3xl font-bold tracking-tight">{inr(row.price)}</div>
-          <div className={`mt-1 text-sm font-semibold ${tone(row.change_pct)}`}>{indexMove(row)}</div>
+          <div className={`mt-2 text-sm ${up ? "move-up" : "move-down"}`}>{indexMove(row)}</div>
         </>
       )}
     </Link>
@@ -283,7 +283,7 @@ function StockCard({ row }: { row: Quote }) {
       <CompanyLogo symbol={row.display_symbol} label={label} />
       <div className="mt-3 line-clamp-2 min-h-10 text-sm font-medium">{label}</div>
       <div className="mt-2 text-lg font-semibold">{inr(row.price)}</div>
-      <div className={`text-sm font-semibold ${tone(row.change_pct)}`}>{moveLabel(row)}</div>
+      <div className={`mt-1 text-sm ${(row.change_pct ?? 0) >= 0 ? "move-up" : "move-down"}`}>{moveLabel(row)}</div>
     </article>
   );
 }

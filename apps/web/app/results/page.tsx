@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PageHead } from "@/components/PageHead";
 import { Failure, Loading } from "@/components/States";
 import { api } from "@/lib/api";
 import { listedLogoUrl } from "@/lib/logos";
@@ -64,20 +65,17 @@ export default function ResultsPage() {
   return (
     <div className="grid min-w-0 gap-4">
       <section className="panel p-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-semibold">Corporate Result</h1>
-            <p className="mt-1 max-w-2xl text-sm text-mute">
-              Upcoming financial results for the top 250 companies, Nifty 100 and Nifty Midcap 150. The date is the board meeting the company has told the exchange about.
-            </p>
-          </div>
-          {data?.status === "ok" && (
-            <div className="text-right">
-              <div className="text-2xl font-semibold">{shown}</div>
-              <div className="text-xs text-mute">results in the top 250</div>
+        <PageHead
+          kicker="Market"
+          title="Corporate results"
+          lede="Upcoming financial results for the top 250 companies, Nifty 100 and Nifty Midcap 150. The date is the board meeting the company has told the exchange about."
+          aside={data?.status === "ok" ? (
+            <div className="stat text-right">
+              <strong>{shown}</strong>
+              <span>results in the top 250</span>
             </div>
-          )}
-        </div>
+          ) : null}
+        />
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <input
             value={query}

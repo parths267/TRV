@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { PageHead } from "@/components/PageHead";
 import { Failure, Loading } from "@/components/States";
 import { api } from "@/lib/api";
-import { pct, tone } from "@/lib/format";
+import { pct } from "@/lib/format";
 
 type Move = { triggered?: boolean; available?: boolean; change_pct?: number; reason?: string; from?: string; to?: string; confirmation?: string };
 type Reading = { id: string; name: string; move: Move; gap: { available?: boolean; gap_pct?: number; reason?: string }; vwap: { value?: number | null; above?: boolean | null; note?: string } | null; intraday_error?: string; intraday_count?: number };
@@ -39,6 +40,11 @@ export default function IndicesPage() {
 
   return (
     <div className="grid gap-4">
+      <PageHead
+        kicker="Market"
+        title="Index intelligence"
+        lede="Measure a short window on the main indices, then read breadth and the example rule. This is a study of delayed bars, not a signal to trade."
+      />
       <section className="panel flex flex-wrap items-end gap-3 p-4">
         <label className="grid gap-1 text-sm">Threshold %
           <input type="number" step="0.1" value={threshold} onChange={(event) => setThreshold(Number(event.target.value))} />
@@ -53,7 +59,7 @@ export default function IndicesPage() {
       {data && (
         <>
           <section className="panel p-4">
-            <h1 className="font-medium">Example rule triggered: {data.example_rule.triggered ? "yes" : "no"}</h1>
+            <h2>Example rule {data.example_rule.triggered ? "triggered" : "not triggered"}</h2>
             <p className="text-sm text-mute">{data.example_rule.statement}</p>
             <p className="mt-2 text-sm">Banking names below the prior 20-session low: {data.banking_support.breaks}. Unknown: {data.banking_support.unknown}. {data.banking_support.universe_note}</p>
             <p className="text-sm">NIFTY 50 breadth {data.nifty50_breadth.advances}/{data.nifty50_breadth.declines}.</p>
@@ -66,7 +72,7 @@ export default function IndicesPage() {
                   <Link href={`/options?index=${encodeURIComponent(row.id)}`} className="pill">OPTION CHAIN</Link>
                 </div>
                 {row.move.available ? (
-                  <p className={`font-mono text-xl ${tone(row.move.change_pct)}`}>{pct(row.move.change_pct)}</p>
+                  <p className={`mt-2 text-xl ${((row.move.change_pct ?? 0) >= 0) ? "move-up" : "move-down"}`}>{pct(row.move.change_pct)}</p>
                 ) : (
                   <p className="text-down">{row.move.reason || row.intraday_error || "Window unavailable"}</p>
                 )}

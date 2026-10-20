@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { PageHead } from "@/components/PageHead";
 import { Failure } from "@/components/States";
 import { api } from "@/lib/api";
-import { num, pct, tone } from "@/lib/format";
+import { num, pct } from "@/lib/format";
 
 type Candle = { date: string; open: number; high: number; low: number; close: number };
 
@@ -64,6 +65,11 @@ function Research() {
 
   return (
     <div className="grid gap-4">
+      <PageHead
+        kicker="Research"
+        title="Stock research"
+        lede="Daily candles and the latest delayed quote. The chart is drawn from the candles that arrived. It does not fill missing sessions."
+      />
       <section className="panel grid gap-3 p-4 md:grid-cols-[1fr_auto]">
         <input value={query} placeholder="Search NSE or BSE symbol" onChange={(event) => setQuery(event.target.value)} />
         <button type="button" onClick={async () => {
@@ -82,9 +88,10 @@ function Research() {
       )}
       {error && <Failure error={error} onRetry={() => load()} />}
       {quote && (
-        <section className="panel p-4">
-          <h1 className="text-xl font-semibold">{String(quote.company || quote.symbol || symbol)}</h1>
-          <p className={`font-mono text-3xl ${tone(change)}`}>{num(quote.price as number)} <span className="text-lg">{pct(change)}</span></p>
+        <section className="panel p-5">
+          <h2>{String(quote.company || quote.symbol || symbol)}</h2>
+          <p className="mt-2 text-3xl font-semibold tracking-tight">{num(quote.price as number)}</p>
+          <p className={`mt-2 text-sm ${(change ?? 0) >= 0 ? "move-up" : "move-down"}`}>{pct(change)}</p>
           <p className="text-xs text-mute">Source {String(quote.provider)} · as of {String(quote.market_time || "unknown")} · {quote.quote_stale ? "stale" : "quote timestamp accepted"} · unofficial feed</p>
         </section>
       )}

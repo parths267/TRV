@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { PageHead } from "@/components/PageHead";
 import { Failure } from "@/components/States";
 import { api } from "@/lib/api";
 import { num, pct } from "@/lib/format";
@@ -65,12 +66,11 @@ export default function StrategiesPage() {
 
   return (
     <div className="grid gap-5">
-      <div>
-        <h1 className="text-2xl font-semibold">Strategy lab</h1>
-        <p className="mt-1 max-w-3xl text-sm text-mute">
-          Pick a screen to see which index constituents meet it, across large, mid, and small caps. A match is a filter on delayed daily bars, not a recommendation.
-        </p>
-      </div>
+      <PageHead
+        kicker="Research"
+        title="Strategy lab"
+        lede="Pick a screen to see which index constituents meet it, across large, mid, and small caps. A match is a filter on delayed daily bars, not a recommendation."
+      />
       {error && <Failure error={error} />}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {screens.map((item, index) => (

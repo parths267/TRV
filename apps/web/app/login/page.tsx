@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api, setToken } from "@/lib/api";
@@ -10,6 +10,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    const message = sessionStorage.getItem("stoxs8_notice");
+    if (!message) return;
+    sessionStorage.removeItem("stoxs8_notice");
+    setNotice(message);
+  }, []);
 
   return (
     <form
@@ -29,9 +37,17 @@ export default function LoginPage() {
         }
       }}
     >
-      <h1 className="text-xl font-semibold">Sign in</h1>
-      <input value={email} onChange={(event) => setEmail(event.target.value)} type="text" placeholder="Username" autoComplete="username" required />
-      <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Password" required />
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+        <p className="mt-1 text-sm text-mute">Your research board, paper book, and alerts.</p>
+      </div>
+      <label className="grid gap-1 text-sm font-medium">Email
+        <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="username" required />
+      </label>
+      <label className="grid gap-1 text-sm font-medium">Password
+        <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="current-password" required />
+      </label>
+      {notice && <p className="text-sm text-mute">{notice}</p>}
       {error && <p className="text-sm text-down">{error}</p>}
       <button type="submit">Sign in</button>
       <Link href="/register" className="text-sm text-mute">Create an account</Link>

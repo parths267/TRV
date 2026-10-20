@@ -15,7 +15,7 @@ const config: Config = {
         down: "#D64545",
       },
       fontFamily: {
-        sans: ["Segoe UI", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["Plus Jakarta Sans", "Segoe UI", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["Cascadia Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
     },

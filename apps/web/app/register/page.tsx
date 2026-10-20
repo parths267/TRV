@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, setToken } from "@/lib/api";
+import { api } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -10,7 +10,6 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [verify, setVerify] = useState("");
 
   return (
     <form
@@ -23,24 +22,30 @@ export default function RegisterPage() {
             method: "POST",
             body: JSON.stringify({ email, password, name }),
           });
-          setToken(body.access_token);
           if (body.verification_token) {
-            await api("/api/v1/auth/verify-email", { method: "POST", body: JSON.stringify({ token: body.verification_token }) });
-            setVerify("Email marked verified with the development token.");
+            await api("/api/v1/auth/verify-email", { method: "POST", body: JSON.stringify({ token: body.verification_token }) }).catch(() => undefined);
           }
-          router.push("/");
+          sessionStorage.setItem("stoxs8_notice", "Account created. Sign in with that email and password.");
+          router.push("/login");
         } catch (err) {
           setError(err instanceof Error ? err.message : "Registration failed");
         }
       }}
     >
-      <h1 className="text-xl font-semibold">Create account</h1>
-      <p className="text-sm text-mute">Free plan. Password needs at least 10 characters. No payment is collected.</p>
-      <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Name" />
-      <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="Email" required />
-      <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Password" required />
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Create account</h1>
+        <p className="mt-1 text-sm text-mute">Free plan. Password needs at least 10 characters. No payment is collected.</p>
+      </div>
+      <label className="grid gap-1 text-sm font-medium">Name
+        <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" />
+      </label>
+      <label className="grid gap-1 text-sm font-medium">Email
+        <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" autoComplete="email" required />
+      </label>
+      <label className="grid gap-1 text-sm font-medium">Password
+        <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" autoComplete="new-password" required />
+      </label>
       {error && <p className="text-sm text-down">{error}</p>}
-      {verify && <p className="text-sm text-mute">{verify}</p>}
       <button type="submit">Register</button>
     </form>
   );
